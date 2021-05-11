@@ -18,7 +18,11 @@ class Minesweeper extends StatelessWidget {
       theme: ThemeData(
         appBarTheme: AppBarTheme(color: Colors.grey[800]),
       ),
-      home: MineSweeperScreen(),
+      home: MineSweeperScreen(
+        width: 10,
+        height: 10,
+        numBombs: 10,
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
