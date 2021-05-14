@@ -1,41 +1,48 @@
 // Flutter
 import 'package:flutter/material.dart';
+// Third party
+import 'package:provider/provider.dart';
 // Local
-import 'package:minesweeper/components/cell_controller.dart';
+import 'package:minesweeper/components/minesweeper_controller.dart';
 
-class CellWidget extends StatefulWidget {
-  final CellController controller;
+class CellWidget extends StatelessWidget {
+  final int i;
+  final int j;
 
-  CellWidget({this.controller});
+  CellWidget(this.i, this.j);
 
-  @override
-  _CellWidgetState createState() => _CellWidgetState();
-}
-
-class _CellWidgetState extends State<CellWidget> {
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          widget.controller.reveal();
-        });
-      },
-      child: Container(
-        width: 40,
-        height: 40,
-        color: Colors.white,
-        child: Padding(
-          padding: EdgeInsets.all(4),
-          child: Container(
-            color:
-                widget.controller.isRevealed ? Colors.white : Colors.grey[800],
-            child: widget.controller.isRevealed
-                ? Center(
-                    child: widget.controller.isBomb
-                        ? Icon(Icons.whatshot)
-                        : Text('${widget.controller.numSurroundingBombs}'))
-                : null,
+    return Consumer<MinesweeperController>(
+      builder: (BuildContext context, MinesweeperController gameController,
+              Widget child) =>
+          GestureDetector(
+        onTap: () {
+//          gameController.cellControllers[i][j].reveal();
+          gameController.reveal(i, j);
+        },
+        child: Container(
+          width: 40,
+          height: 40,
+          color: Colors.white,
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Container(
+              color: gameController.revealed[i][j]
+//              color: gameController.cellControllers[i][j].isRevealed
+                  ? Colors.white
+                  : Colors.grey[800],
+              child: gameController.revealed[i][j]
+//                child: gameController.cellControllers[i][j].isRevealed
+                  ? Center(
+                      child: gameController.bombed[i][j]
+//                  child: gameController.cellControllers[i][j].isBomb
+                          ? Icon(Icons.whatshot)
+                          : Text(
+//                      '${gameController.cellControllers[i][j].numSurroundingBombs}'))
+                              '${gameController.numSurroundingBombs[i][j]}'))
+                  : null,
+            ),
           ),
         ),
       ),
