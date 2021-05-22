@@ -81,26 +81,64 @@ class MinesweeperController extends ChangeNotifier {
     }
   }
 
-  void reveal(int i, int j) {
-    if (revealed[i][j]) return;
+  int calcNumSurroundingFlagsAt(int i, int j) {
+    int flags = 0;
+    int xMin = i == 0 ? 0 : -1;
+    int xMax = i == height - 1 ? 0 : 1;
 
-    revealed[i][j] = true;
+    int yMin = j == 0 ? 0 : -1;
+    int yMax = j == width - 1 ? 0 : 1;
 
-    if (numSurroundingBombs[i][j] == 0 && !bombed[i][j]) {
-      int xMin = i == 0 ? 0 : -1;
-      int xMax = i == height - 1 ? 0 : 1;
+    for (int x = xMin; x <= xMax; x++) {
+      for (int y = yMin; y <= yMax; y++) {
+        if (x != 0 || y != 0) {
+          flags += flagged[i + x][j + y] ? 1 : 0;
+        }
+      }
+    }
+    return flags;
+  }
 
-      int yMin = j == 0 ? 0 : -1;
-      int yMax = j == width - 1 ? 0 : 1;
+  void reveal(int i, int j, bool recursive) {
+    if (flagged[i][j] || (revealed[i][j] && recursive)) return;
+
+    int xMin = i == 0 ? 0 : -1;
+    int xMax = i == height - 1 ? 0 : 1;
+
+    int yMin = j == 0 ? 0 : -1;
+    int yMax = j == width - 1 ? 0 : 1;
+
+    if (revealed[i][j]) {
+      if (numSurroundingBombs[i][j] != calcNumSurroundingFlagsAt(i, j)) return;
 
       for (int x = xMin; x <= xMax; x++) {
         for (int y = yMin; y <= yMax; y++) {
-          if (x != 0 || y != 0) {
-            reveal(i + x, j + y);
+          if ((x != 0 || y != 0) && !flagged[i][j]) {
+            reveal(i + x, j + y, true);
+          }
+        }
+      }
+    } else {
+      revealed[i][j] = true;
+
+      if (numSurroundingBombs[i][j] == 0 && !bombed[i][j]) {
+        for (int x = xMin; x <= xMax; x++) {
+          for (int y = yMin; y <= yMax; y++) {
+            if (x != 0 || y != 0) {
+              reveal(i + x, j + y, true);
+            }
           }
         }
       }
     }
+
+    notifyListeners();
+  }
+
+  void flag(int i, int j) {
+    if (revealed[i][j]) return;
+
+    flagged[i][j] = !flagged[i][j];
 
     notifyListeners();
   }

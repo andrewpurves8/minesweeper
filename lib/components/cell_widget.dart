@@ -13,13 +13,22 @@ class CellWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MinesweeperController>(
-      builder: (BuildContext context, MinesweeperController gameController,
-              Widget child) =>
-          GestureDetector(
+    return Consumer<MinesweeperController>(builder: (BuildContext context,
+        MinesweeperController gameController, Widget child) {
+      Widget w;
+      if (gameController.revealed[i][j]) {
+        if (gameController.bombed[i][j])
+          w = Icon(Icons.whatshot);
+        else if (gameController.numSurroundingBombs[i][j] > 0)
+          w = Text('${gameController.numSurroundingBombs[i][j]}');
+      } else if (gameController.flagged[i][j]) w = Icon(Icons.flag);
+
+      return GestureDetector(
         onTap: () {
-//          gameController.cellControllers[i][j].reveal();
-          gameController.reveal(i, j);
+          gameController.reveal(i, j, false);
+        },
+        onLongPress: () {
+          gameController.flag(i, j);
         },
         child: Container(
           width: 40,
@@ -29,23 +38,13 @@ class CellWidget extends StatelessWidget {
             padding: EdgeInsets.all(4),
             child: Container(
               color: gameController.revealed[i][j]
-//              color: gameController.cellControllers[i][j].isRevealed
                   ? Colors.white
                   : Colors.grey[800],
-              child: gameController.revealed[i][j]
-//                child: gameController.cellControllers[i][j].isRevealed
-                  ? Center(
-                      child: gameController.bombed[i][j]
-//                  child: gameController.cellControllers[i][j].isBomb
-                          ? Icon(Icons.whatshot)
-                          : Text(
-//                      '${gameController.cellControllers[i][j].numSurroundingBombs}'))
-                              '${gameController.numSurroundingBombs[i][j]}'))
-                  : null,
+              child: Center(child: w),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
