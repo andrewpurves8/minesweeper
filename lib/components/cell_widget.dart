@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 // Third party
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
 // Local
 import 'package:minesweeper/components/minesweeper_controller.dart';
 
@@ -20,7 +21,7 @@ class CellWidget extends StatelessWidget {
       if (gameController.revealed[i][j]) {
         if (gameController.bombed[i][j])
           w = Icon(
-            // Icons.block,
+//            Icons.block,
             // Icons.brightness_5,
             // Icons.brightness_high_outlined,
             // Icons.clear,
@@ -30,7 +31,7 @@ class CellWidget extends StatelessWidget {
             // Icons.gps_not_fixed,
             // Icons.grade,
             Icons.new_releases_outlined,
-            // Icons.sentiment_very_dissatisfied_outlined,
+//             Icons.sentiment_very_dissatisfied_outlined,
             color: Colors.red,
           );
         else if (gameController.numSurroundingBombs[i][j] > 0)
@@ -62,6 +63,7 @@ class CellWidget extends StatelessWidget {
         },
         onLongPress: () {
           gameController.flag(i, j);
+          vibrate(100);
         },
         child: Container(
           width: 40,
@@ -82,5 +84,13 @@ class CellWidget extends StatelessWidget {
         ),
       );
     });
+  }
+
+  void vibrate(int duration) async {
+    if (await Vibration.hasCustomVibrationsSupport()) {
+      Vibration.vibrate(duration: duration);
+    } else {
+      Vibration.vibrate();
+    }
   }
 }
