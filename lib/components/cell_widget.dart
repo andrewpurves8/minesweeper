@@ -1,4 +1,5 @@
 // Flutter
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 // Third party
 import 'package:provider/provider.dart';
@@ -18,10 +19,42 @@ class CellWidget extends StatelessWidget {
       Widget w;
       if (gameController.revealed[i][j]) {
         if (gameController.bombed[i][j])
-          w = Icon(Icons.whatshot);
+          w = Icon(
+            // Icons.block,
+            // Icons.brightness_5,
+            // Icons.brightness_high_outlined,
+            // Icons.clear,
+            // Icons.coronavirus,
+            // Icons.dangerous,
+            // Icons.flare,
+            // Icons.gps_not_fixed,
+            // Icons.grade,
+            Icons.new_releases_outlined,
+            // Icons.sentiment_very_dissatisfied_outlined,
+            color: Colors.red,
+          );
         else if (gameController.numSurroundingBombs[i][j] > 0)
-          w = Text('${gameController.numSurroundingBombs[i][j]}');
-      } else if (gameController.flagged[i][j]) w = Icon(Icons.flag);
+          w = Text(
+            '${gameController.numSurroundingBombs[i][j]}',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          );
+      } else if (gameController.flagged[i][j])
+        w = Icon(
+          Icons.flag,
+          color: Colors.grey[900],
+        );
+
+      bool topRevealed = i != 0 && gameController.revealed[i - 1][j];
+      bool bottomRevealed =
+          i != gameController.height - 1 && gameController.revealed[i + 1][j];
+      bool leftRevealed = j != 0 && gameController.revealed[i][j - 1];
+      bool rightRevealed =
+          j != gameController.width - 1 && gameController.revealed[i][j + 1];
+
+      bool roundTopLeft = topRevealed && leftRevealed;
+      bool roundTopRight = topRevealed && rightRevealed;
+      bool roundBottomLeft = bottomRevealed && leftRevealed;
+      bool roundBottomRight = bottomRevealed && rightRevealed;
 
       return GestureDetector(
         onTap: () {
@@ -33,16 +66,19 @@ class CellWidget extends StatelessWidget {
         child: Container(
           width: 40,
           height: 40,
-          color: Colors.white,
-          child: Padding(
-            padding: EdgeInsets.all(4),
-            child: Container(
-              color: gameController.revealed[i][j]
-                  ? Colors.white
-                  : Colors.grey[800],
-              child: Center(child: w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: roundTopLeft ? Radius.circular(5.0) : Radius.zero,
+              topRight: roundTopRight ? Radius.circular(5.0) : Radius.zero,
+              bottomLeft: roundBottomLeft ? Radius.circular(5.0) : Radius.zero,
+              bottomRight:
+                  roundBottomRight ? Radius.circular(5.0) : Radius.zero,
             ),
+            color: gameController.revealed[i][j]
+                ? Colors.grey[900]
+                : Colors.green[200], // Colors.lime,
           ),
+          child: Center(child: w),
         ),
       );
     });

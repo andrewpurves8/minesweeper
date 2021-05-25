@@ -18,9 +18,9 @@ class Minesweeper extends StatelessWidget {
     ]);
     return ChangeNotifierProvider<MinesweeperController>(
       create: (BuildContext context) => MinesweeperController(
-        width: 10,
-        height: 10,
-        numBombs: 10,
+        width: 20,
+        height: 40,
+        numBombs: 80,
       ),
       child: MaterialApp(
         title: 'Minesweeper',

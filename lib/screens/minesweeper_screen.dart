@@ -15,12 +15,20 @@ class MineSweeperScreen extends StatelessWidget {
                 Widget child) =>
             Scaffold(
               appBar: AppBar(title: Text('Minesweeper')),
-              body: createCells(gameController),
+              backgroundColor: Colors.grey[900],
+              body: InteractiveViewer(
+                panEnabled: true,
+                scaleEnabled: true,
+                minScale: 0.1,
+                maxScale: 1.4,
+                constrained: false,
+                child: createCells(gameController),
+              ),
             ));
   }
 
   Column createCells(MinesweeperController gameController) {
-    List<Row> rows = [];
+    List<Widget> rows = [];
     for (int i = 0; i < gameController.height; i++) {
       List<CellWidget> cellWidgets = [];
       for (int j = 0; j < gameController.width; j++) {
