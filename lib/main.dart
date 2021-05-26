@@ -1,10 +1,8 @@
 // Flutter
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// Third party
-import 'package:provider/provider.dart';
 // Local
-import 'package:minesweeper/components/minesweeper_controller.dart';
+import 'package:minesweeper/screens/menu_screen.dart';
 import 'package:minesweeper/screens/minesweeper_screen.dart';
 
 void main() => runApp(Minesweeper());
@@ -16,20 +14,13 @@ class Minesweeper extends StatelessWidget {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    return ChangeNotifierProvider<MinesweeperController>(
-      create: (BuildContext context) => MinesweeperController(
-        width: 20,
-        height: 40,
-        numBombs: 80,
+    return MaterialApp(
+      title: 'Minesweeper',
+      theme: ThemeData(
+        appBarTheme: AppBarTheme(color: Colors.grey[800]),
       ),
-      child: MaterialApp(
-        title: 'Minesweeper',
-        theme: ThemeData(
-          appBarTheme: AppBarTheme(color: Colors.grey[800]),
-        ),
-        home: MineSweeperScreen(),
-        debugShowCheckedModeBanner: false,
-      ),
+      home: MenuScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

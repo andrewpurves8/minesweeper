@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 // Local
 import 'package:minesweeper/components/minesweeper_controller.dart';
+import 'package:minesweeper/helpers/constants.dart';
 
 class CellWidget extends StatelessWidget {
   final int i;
@@ -21,7 +22,7 @@ class CellWidget extends StatelessWidget {
       if (gameController.revealed[i][j]) {
         if (gameController.bombed[i][j])
           w = Icon(
-//            Icons.block,
+            // Icons.block,
             // Icons.brightness_5,
             // Icons.brightness_high_outlined,
             // Icons.clear,
@@ -31,18 +32,18 @@ class CellWidget extends StatelessWidget {
             // Icons.gps_not_fixed,
             // Icons.grade,
             Icons.new_releases_outlined,
-//             Icons.sentiment_very_dissatisfied_outlined,
+            // Icons.sentiment_very_dissatisfied_outlined,
             color: Colors.red,
           );
         else if (gameController.numSurroundingBombs[i][j] > 0)
           w = Text(
             '${gameController.numSurroundingBombs[i][j]}',
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            style: TextStyle(color: kColorText, fontSize: 18),
           );
       } else if (gameController.flagged[i][j])
         w = Icon(
           Icons.flag,
-          color: Colors.grey[900],
+          color: kColorBackground,
         );
 
       bool topRevealed = i != 0 && gameController.revealed[i - 1][j];
@@ -76,9 +77,8 @@ class CellWidget extends StatelessWidget {
               bottomRight:
                   roundBottomRight ? Radius.circular(5.0) : Radius.zero,
             ),
-            color: gameController.revealed[i][j]
-                ? Colors.grey[900]
-                : Colors.green[200], // Colors.lime,
+            color:
+                gameController.revealed[i][j] ? kColorBackground : kColorAccent,
           ),
           child: Center(child: w),
         ),
