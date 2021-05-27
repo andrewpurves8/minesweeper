@@ -3,22 +3,45 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 class MinesweeperController extends ChangeNotifier {
-  final int width;
-  final int height;
-  final int numBombs;
-  List<List<bool>> bombed;
-  List<List<bool>> flagged;
-  List<List<bool>> revealed;
-  List<List<int>> numSurroundingBombs;
+  int _width = 0;
+  int get width => _width;
 
-  MinesweeperController({this.width, this.height, this.numBombs}) {
+  int _height = 0;
+  int get height => _height;
+
+  int _numBombs = 0;
+  int get numBombs => _numBombs;
+
+  List<List<bool>> bombed = [[]];
+  List<List<bool>> flagged = [[]];
+  List<List<bool>> revealed = [[]];
+  List<List<int>> numSurroundingBombs = [[]];
+  int emptyCellNearestCentreRow = 0;
+  int emptyCellNearestCentreCol = 0;
+  bool gameWon = false;
+  bool gameLost = false;
+  bool get gameOver => gameWon || gameLost;
+  int numFlags = 0;
+  int numRevealed = 0;
+
+  void init(int width, int height, int numBombs) {
+    _width = width;
+    _height = height;
+    _numBombs = numBombs;
     bombed = create2DListBool();
     flagged = create2DListBool();
     revealed = create2DListBool();
     numSurroundingBombs = create2DListInt();
+    gameWon = false;
+    gameLost = false;
+    numFlags = 0;
+    numRevealed = 0;
 
     populateBombs();
     calcNumSurroundingBombs();
+
+    reveal(emptyCellNearestCentreRow, emptyCellNearestCentreCol, false);
+    notifyListeners();
   }
 
   List<List<bool>> create2DListBool() => List.generate(
@@ -62,6 +85,11 @@ class MinesweeperController extends ChangeNotifier {
   }
 
   void calcNumSurroundingBombs() {
+    double centreRow = (height ~/ 2).toDouble();
+    double centreCol = (width ~/ 2).toDouble();
+    double nearestDistanceToCentre =
+        sqrt(pow(centreRow, 2) + pow(centreCol, 2));
+
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
         int xMin = i == 0 ? 0 : -1;
@@ -75,6 +103,16 @@ class MinesweeperController extends ChangeNotifier {
             if (x != 0 || y != 0) {
               numSurroundingBombs[i][j] += bombed[i + x][j + y] ? 1 : 0;
             }
+          }
+        }
+
+        if (numSurroundingBombs[i][j] == 0 && !bombed[i][j]) {
+          double distanceToCentre = sqrt(pow(i.toDouble() - centreRow, 2) +
+              pow(j.toDouble() - centreCol, 2));
+          if (distanceToCentre < nearestDistanceToCentre) {
+            nearestDistanceToCentre = distanceToCentre;
+            emptyCellNearestCentreRow = i;
+            emptyCellNearestCentreCol = j;
           }
         }
       }
@@ -102,6 +140,12 @@ class MinesweeperController extends ChangeNotifier {
   void reveal(int i, int j, bool recursive) {
     if (flagged[i][j] || (revealed[i][j] && recursive)) return;
 
+    if (bombed[i][j]) {
+      gameLost = true;
+      notifyListeners();
+      return;
+    }
+
     int xMin = i == 0 ? 0 : -1;
     int xMax = i == height - 1 ? 0 : 1;
 
@@ -122,15 +166,20 @@ class MinesweeperController extends ChangeNotifier {
       revealed[i][j] = true;
 
       if (numSurroundingBombs[i][j] == 0 && !bombed[i][j]) {
-        for (int x = xMin; x <= xMax; x++) {
-          for (int y = yMin; y <= yMax; y++) {
-            if (x != 0 || y != 0) {
-              reveal(i + x, j + y, true);
+        Future.delayed(const Duration(milliseconds: 200), () {
+          for (int x = xMin; x <= xMax; x++) {
+            for (int y = yMin; y <= yMax; y++) {
+              if (x != 0 || y != 0) {
+                reveal(i + x, j + y, true);
+              }
             }
           }
-        }
+        });
       }
     }
+
+    numRevealed++;
+    checkWon();
 
     notifyListeners();
   }
@@ -138,8 +187,19 @@ class MinesweeperController extends ChangeNotifier {
   void flag(int i, int j) {
     if (revealed[i][j]) return;
 
+    if (flagged[i][j])
+      numFlags--;
+    else
+      numFlags++;
+
     flagged[i][j] = !flagged[i][j];
 
+    checkWon();
+
     notifyListeners();
+  }
+
+  void checkWon() {
+    gameWon = numRevealed + numFlags == width * height && numFlags == numBombs;
   }
 }

@@ -1,5 +1,4 @@
 // Flutter
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 // Third party
 import 'package:provider/provider.dart';
@@ -8,79 +7,90 @@ import 'package:vibration/vibration.dart';
 import 'package:minesweeper/components/minesweeper_controller.dart';
 import 'package:minesweeper/helpers/constants.dart';
 
-class CellWidget extends StatelessWidget {
+class CellWidget extends StatefulWidget {
   final int i;
   final int j;
 
   CellWidget(this.i, this.j);
 
   @override
+  _CellWidgetState createState() => _CellWidgetState();
+}
+
+class _CellWidgetState extends State<CellWidget>
+    with SingleTickerProviderStateMixin {
+  AnimationController _colorController;
+  Animation<Color> _colorAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _colorController = AnimationController(
+        duration: const Duration(milliseconds: 200), vsync: this);
+    _colorAnimation = ColorTween(begin: kColorAccent, end: kColorBackground)
+        .animate(
+            CurvedAnimation(parent: _colorController, curve: Curves.decelerate))
+          ..addListener(() {
+            setState(() {});
+          });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<MinesweeperController>(builder: (BuildContext context,
         MinesweeperController gameController, Widget child) {
-      Widget w;
-      if (gameController.revealed[i][j]) {
-        if (gameController.bombed[i][j])
-          w = Icon(
-            // Icons.block,
-            // Icons.brightness_5,
-            // Icons.brightness_high_outlined,
-            // Icons.clear,
-            // Icons.coronavirus,
-            // Icons.dangerous,
-            // Icons.flare,
-            // Icons.gps_not_fixed,
-            // Icons.grade,
-            Icons.new_releases_outlined,
-            // Icons.sentiment_very_dissatisfied_outlined,
-            color: Colors.red,
-          );
-        else if (gameController.numSurroundingBombs[i][j] > 0)
-          w = Text(
-            '${gameController.numSurroundingBombs[i][j]}',
-            style: TextStyle(color: kColorText, fontSize: 18),
-          );
-      } else if (gameController.flagged[i][j])
-        w = Icon(
-          Icons.flag,
-          color: kColorBackground,
-        );
-
-      bool topRevealed = i != 0 && gameController.revealed[i - 1][j];
-      bool bottomRevealed =
-          i != gameController.height - 1 && gameController.revealed[i + 1][j];
-      bool leftRevealed = j != 0 && gameController.revealed[i][j - 1];
-      bool rightRevealed =
-          j != gameController.width - 1 && gameController.revealed[i][j + 1];
+      bool topRevealed =
+          widget.i != 0 && gameController.revealed[widget.i - 1][widget.j];
+      bool bottomRevealed = widget.i != gameController.height - 1 &&
+          gameController.revealed[widget.i + 1][widget.j];
+      bool leftRevealed =
+          widget.j != 0 && gameController.revealed[widget.i][widget.j - 1];
+      bool rightRevealed = widget.j != gameController.width - 1 &&
+          gameController.revealed[widget.i][widget.j + 1];
 
       bool roundTopLeft = topRevealed && leftRevealed;
       bool roundTopRight = topRevealed && rightRevealed;
       bool roundBottomLeft = bottomRevealed && leftRevealed;
       bool roundBottomRight = bottomRevealed && rightRevealed;
 
+      if (gameController.revealed[widget.i][widget.j])
+        _colorController.forward();
+
       return GestureDetector(
         onTap: () {
-          gameController.reveal(i, j, false);
+          gameController.reveal(widget.i, widget.j, false);
+          if (gameController.gameLost) vibrate(100);
         },
         onLongPress: () {
-          gameController.flag(i, j);
+          gameController.flag(widget.i, widget.j);
           vibrate(100);
         },
         child: Container(
-          width: 40,
-          height: 40,
+          width: kCellSize,
+          height: kCellSize,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: roundTopLeft ? Radius.circular(5.0) : Radius.zero,
-              topRight: roundTopRight ? Radius.circular(5.0) : Radius.zero,
-              bottomLeft: roundBottomLeft ? Radius.circular(5.0) : Radius.zero,
-              bottomRight:
-                  roundBottomRight ? Radius.circular(5.0) : Radius.zero,
-            ),
-            color:
-                gameController.revealed[i][j] ? kColorBackground : kColorAccent,
+            borderRadius: !gameController.revealed[widget.i][widget.j]
+                ? BorderRadius.only(
+                    topLeft: roundTopLeft ? Radius.circular(5.0) : Radius.zero,
+                    topRight:
+                        roundTopRight ? Radius.circular(5.0) : Radius.zero,
+                    bottomLeft:
+                        roundBottomLeft ? Radius.circular(5.0) : Radius.zero,
+                    bottomRight:
+                        roundBottomRight ? Radius.circular(5.0) : Radius.zero,
+                  )
+                : null,
+            // color: gameController.revealed[widget.i][widget.j]
+            //     ? kColorBackground
+            //     : kColorAccent,
+            color: _colorAnimation.value,
           ),
-          child: Center(child: w),
+          child: Center(
+              child: Opacity(
+                  opacity: gameController.revealed[widget.i][widget.j]
+                      ? _colorController.value
+                      : 1.0,
+                  child: _createCell(gameController))),
         ),
       );
     });
@@ -92,5 +102,28 @@ class CellWidget extends StatelessWidget {
     } else {
       Vibration.vibrate();
     }
+  }
+
+  Widget _createCell(MinesweeperController gameController) {
+    if (gameController.revealed[widget.i][widget.j]) {
+      if (gameController.bombed[widget.i][widget.j]) {
+        return Icon(
+          Icons.new_releases_outlined,
+          color: Colors.red,
+        );
+      } else if (gameController.numSurroundingBombs[widget.i][widget.j] > 0) {
+        return Text(
+          '${gameController.numSurroundingBombs[widget.i][widget.j]}',
+          style: TextStyle(color: kColorText, fontSize: 18),
+        );
+      }
+    } else if (gameController.flagged[widget.i][widget.j]) {
+      return Icon(
+        Icons.flag,
+        color: kColorBackground,
+      );
+    }
+
+    return null;
   }
 }

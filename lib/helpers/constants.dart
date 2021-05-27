@@ -1,6 +1,8 @@
 // Flutter
 import 'package:flutter/material.dart';
 
-Color kColorBackground = Colors.grey[900];
-Color kColorAccent = Colors.green[200];
-Color kColorText = Colors.white;
+final Color kColorBackground = Colors.grey[900];
+final Color kColorAccent = Colors.green[200];
+final Color kColorText = Colors.white;
+
+const double kCellSize = 40.0;
