@@ -160,7 +160,7 @@ class MinesweeperController extends ChangeNotifier {
       revealed[i][j] = true;
 
       if (numSurroundingBombs[i][j] == 0 && !bombed[i][j]) {
-        Future.delayed(const Duration(milliseconds: 100), () {
+        Future.delayed(const Duration(milliseconds: 50), () {
           for (int x = xMin; x <= xMax; x++) {
             for (int y = yMin; y <= yMax; y++) {
               if (x != 0 || y != 0) {
@@ -170,11 +170,12 @@ class MinesweeperController extends ChangeNotifier {
           }
         });
       }
+
+      numRevealed++;
     }
 
     notifyListeners();
 
-    numRevealed++;
     checkWon();
 
     if (bombed[i][j]) {

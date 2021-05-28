@@ -27,7 +27,7 @@ class _CellWidgetState extends State<CellWidget>
   void initState() {
     super.initState();
     _colorController = AnimationController(
-        duration: const Duration(milliseconds: 200), vsync: this);
+        duration: const Duration(milliseconds: 300), vsync: this);
     _colorAnimation = ColorTween(begin: kColorAccent, end: kColorBackground)
         .animate(_colorController)
           ..addListener(() {
@@ -60,50 +60,45 @@ class _CellWidgetState extends State<CellWidget>
       return GestureDetector(
         onTap: () {
           gameController.reveal(widget.i, widget.j, false);
-          if (gameController.gameLost) vibrate(100);
+          if (gameController.gameLost) vibrate(200);
         },
         onLongPress: () {
           gameController.flag(widget.i, widget.j);
-          vibrate(100);
+          vibrate(50);
         },
-        child: Container(
+        child: SizedBox(
           width: kCellSize,
           height: kCellSize,
-          decoration: BoxDecoration(
-            borderRadius: !gameController.revealed[widget.i][widget.j]
-                ? BorderRadius.only(
-                    topLeft: roundTopLeft ? Radius.circular(5.0) : Radius.zero,
-                    topRight:
-                        roundTopRight ? Radius.circular(5.0) : Radius.zero,
-                    bottomLeft:
-                        roundBottomLeft ? Radius.circular(5.0) : Radius.zero,
-                    bottomRight:
-                        roundBottomRight ? Radius.circular(5.0) : Radius.zero,
-                  )
-                : null,
-            color: gameController.bombed[widget.i][widget.j] &&
-                    gameController.gameLost
-                ? Colors.red
-                : gameController.revealed[widget.i][widget.j] &&
-                        !gameController.gameOver
-                    ? _colorAnimation.value
-                    : gameController.revealed[widget.i][widget.j]
-                        ? kColorBackground
-                        : kColorAccent,
-            // color: gameController.revealed[widget.i][widget.j] &&
-            //     !gameController.gameOver
-            //     ? _colorAnimation.value
-            //     : gameController.revealed[widget.i][widget.j]
-            //     ? kColorBackground
-            //     : kColorAccent,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              // Only round border of covered cells or bombed cells at end-game
+              borderRadius: !gameController.revealed[widget.i][widget.j] ||
+                      (gameController.gameLost &&
+                          gameController.bombed[widget.i][widget.j])
+                  ? BorderRadius.only(
+                      topLeft:
+                          roundTopLeft ? Radius.circular(5.0) : Radius.zero,
+                      topRight:
+                          roundTopRight ? Radius.circular(5.0) : Radius.zero,
+                      bottomLeft:
+                          roundBottomLeft ? Radius.circular(5.0) : Radius.zero,
+                      bottomRight:
+                          roundBottomRight ? Radius.circular(5.0) : Radius.zero,
+                    )
+                  : null,
+              color: _determineBackgroundColor(gameController),
+            ),
+            child: Center(
+                child: Opacity(
+                    // Only smooth opacity of revealed cells during the game
+                    opacity: gameController.revealed[widget.i][widget.j] &&
+                            !gameController.gameOver
+                        ? _colorController.value
+                        : 1.0,
+                    child: _createCell(gameController))),
           ),
-          child: Center(
-              child: Opacity(
-                  opacity: gameController.revealed[widget.i][widget.j] &&
-                          !gameController.gameOver
-                      ? _colorController.value
-                      : 1.0,
-                  child: _createCell(gameController))),
         ),
       );
     });
@@ -118,31 +113,46 @@ class _CellWidgetState extends State<CellWidget>
   }
 
   Widget _createCell(MinesweeperController gameController) {
-    if (gameController.revealed[widget.i][widget.j]) {
-      if (gameController.bombed[widget.i][widget.j]) {
-        return Icon(
-          Icons.new_releases_outlined,
-          color: Colors.black,
-        );
-      } else if (gameController.numSurroundingBombs[widget.i][widget.j] > 0) {
-        return Text(
-          '${gameController.numSurroundingBombs[widget.i][widget.j]}',
-          style: TextStyle(color: kColorText, fontSize: 18),
-        );
-      }
-    } else if (gameController.flagged[widget.i][widget.j]) {
+    // If flagged, show flag icon
+    if (gameController.flagged[widget.i][widget.j])
       return Icon(
         Icons.flag,
         color: kColorBackground,
       );
-    } else if (gameController.gameLost &&
-        gameController.bombed[widget.i][widget.j]) {
+
+    // If we lost the game, show all the bombs
+    if (gameController.gameLost && gameController.bombed[widget.i][widget.j])
       return Icon(
         Icons.new_releases_outlined,
         color: Colors.black,
       );
+
+    // If the tile has been revealed and there are bombs around it, show number of bombs
+    if (gameController.revealed[widget.i][widget.j] &&
+        gameController.numSurroundingBombs[widget.i][widget.j] > 0)
+      return Text(
+        '${gameController.numSurroundingBombs[widget.i][widget.j]}',
+        style: TextStyle(color: kColorText, fontSize: 18),
+      );
+
+    // Else show nothing
+    return null;
+  }
+
+  Color _determineBackgroundColor(MinesweeperController gameController) {
+    // If we lost the game, show bombs in red
+    if (gameController.bombed[widget.i][widget.j] && gameController.gameLost)
+      return Colors.red;
+
+    if (gameController.revealed[widget.i][widget.j]) {
+      // The tile revealed at game-over shouldn't animate
+      if (gameController.gameOver)
+        return kColorBackground;
+      else
+        return _colorAnimation.value;
     }
 
-    return null;
+    // Not revealed, return covered color
+    return kColorAccent;
   }
 }
