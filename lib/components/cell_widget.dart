@@ -1,3 +1,4 @@
+import 'dart:math';
 // Flutter
 import 'package:flutter/material.dart';
 // Third party
@@ -28,8 +29,7 @@ class _CellWidgetState extends State<CellWidget>
     _colorController = AnimationController(
         duration: const Duration(milliseconds: 200), vsync: this);
     _colorAnimation = ColorTween(begin: kColorAccent, end: kColorBackground)
-        .animate(
-            CurvedAnimation(parent: _colorController, curve: Curves.decelerate))
+        .animate(_colorController)
           ..addListener(() {
             setState(() {});
           });
@@ -39,6 +39,10 @@ class _CellWidgetState extends State<CellWidget>
   Widget build(BuildContext context) {
     return Consumer<MinesweeperController>(builder: (BuildContext context,
         MinesweeperController gameController, Widget child) {
+      if (gameController.revealed[widget.i][widget.j]) {
+        _colorController.forward();
+      }
+
       bool topRevealed =
           widget.i != 0 && gameController.revealed[widget.i - 1][widget.j];
       bool bottomRevealed = widget.i != gameController.height - 1 &&
@@ -52,9 +56,6 @@ class _CellWidgetState extends State<CellWidget>
       bool roundTopRight = topRevealed && rightRevealed;
       bool roundBottomLeft = bottomRevealed && leftRevealed;
       bool roundBottomRight = bottomRevealed && rightRevealed;
-
-      if (gameController.revealed[widget.i][widget.j])
-        _colorController.forward();
 
       return GestureDetector(
         onTap: () {
@@ -80,14 +81,26 @@ class _CellWidgetState extends State<CellWidget>
                         roundBottomRight ? Radius.circular(5.0) : Radius.zero,
                   )
                 : null,
-            // color: gameController.revealed[widget.i][widget.j]
+            color: gameController.bombed[widget.i][widget.j] &&
+                    gameController.gameLost
+                ? Colors.red
+                : gameController.revealed[widget.i][widget.j] &&
+                        !gameController.gameOver
+                    ? _colorAnimation.value
+                    : gameController.revealed[widget.i][widget.j]
+                        ? kColorBackground
+                        : kColorAccent,
+            // color: gameController.revealed[widget.i][widget.j] &&
+            //     !gameController.gameOver
+            //     ? _colorAnimation.value
+            //     : gameController.revealed[widget.i][widget.j]
             //     ? kColorBackground
             //     : kColorAccent,
-            color: _colorAnimation.value,
           ),
           child: Center(
               child: Opacity(
-                  opacity: gameController.revealed[widget.i][widget.j]
+                  opacity: gameController.revealed[widget.i][widget.j] &&
+                          !gameController.gameOver
                       ? _colorController.value
                       : 1.0,
                   child: _createCell(gameController))),
@@ -109,7 +122,7 @@ class _CellWidgetState extends State<CellWidget>
       if (gameController.bombed[widget.i][widget.j]) {
         return Icon(
           Icons.new_releases_outlined,
-          color: Colors.red,
+          color: Colors.black,
         );
       } else if (gameController.numSurroundingBombs[widget.i][widget.j] > 0) {
         return Text(
@@ -121,6 +134,12 @@ class _CellWidgetState extends State<CellWidget>
       return Icon(
         Icons.flag,
         color: kColorBackground,
+      );
+    } else if (gameController.gameLost &&
+        gameController.bombed[widget.i][widget.j]) {
+      return Icon(
+        Icons.new_releases_outlined,
+        color: Colors.black,
       );
     }
 

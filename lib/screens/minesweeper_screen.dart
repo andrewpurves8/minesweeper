@@ -50,9 +50,10 @@ class _MinesweeperScreenState extends State<MinesweeperScreen>
     timerStream = stopWatchStream();
     timerSubscription = timerStream.listen((int newTick) {
       setState(() {
-        String minutes = ((newTick / 60) % 60).floor().toString();
-        String seconds = (newTick % 60).floor().toString().padLeft(2, '0');
-        time = '$minutes:$seconds';
+        int minutes = ((newTick / 60) % 60).floor();
+        int seconds = (newTick % 60).floor();
+        String secondsPadded = seconds.toString().padLeft(2, '0');
+        time = minutes > 0 ? '$minutes:$secondsPadded' : '$seconds';
       });
     });
     double availableHeight =
@@ -64,7 +65,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen>
             kCellSize * (widget.emptyCellNearestCentreRow.toDouble() + 0.5),
         0.0);
     opacityController = AnimationController(
-        duration: const Duration(milliseconds: 2000), vsync: this);
+        duration: const Duration(milliseconds: 5000), vsync: this);
     opacityController.addListener(() {
       setState(() {});
     });
@@ -229,7 +230,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen>
               children: [
                 interactiveViewer,
                 Opacity(
-                  opacity: opacityController.value,
+                  opacity: 0.9 * opacityController.value,
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,

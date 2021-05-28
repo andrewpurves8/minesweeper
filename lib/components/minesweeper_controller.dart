@@ -140,12 +140,6 @@ class MinesweeperController extends ChangeNotifier {
   void reveal(int i, int j, bool recursive) {
     if (flagged[i][j] || (revealed[i][j] && recursive)) return;
 
-    if (bombed[i][j]) {
-      gameLost = true;
-      notifyListeners();
-      return;
-    }
-
     int xMin = i == 0 ? 0 : -1;
     int xMax = i == height - 1 ? 0 : 1;
 
@@ -166,7 +160,7 @@ class MinesweeperController extends ChangeNotifier {
       revealed[i][j] = true;
 
       if (numSurroundingBombs[i][j] == 0 && !bombed[i][j]) {
-        Future.delayed(const Duration(milliseconds: 200), () {
+        Future.delayed(const Duration(milliseconds: 100), () {
           for (int x = xMin; x <= xMax; x++) {
             for (int y = yMin; y <= yMax; y++) {
               if (x != 0 || y != 0) {
@@ -178,10 +172,15 @@ class MinesweeperController extends ChangeNotifier {
       }
     }
 
+    notifyListeners();
+
     numRevealed++;
     checkWon();
 
-    notifyListeners();
+    if (bombed[i][j]) {
+      gameLost = true;
+      notifyListeners();
+    }
   }
 
   void flag(int i, int j) {
@@ -194,12 +193,13 @@ class MinesweeperController extends ChangeNotifier {
 
     flagged[i][j] = !flagged[i][j];
 
-    checkWon();
-
     notifyListeners();
+
+    checkWon();
   }
 
   void checkWon() {
     gameWon = numRevealed + numFlags == width * height && numFlags == numBombs;
+    if (gameWon) notifyListeners();
   }
 }
